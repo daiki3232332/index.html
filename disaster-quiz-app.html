@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>怒れ！鬼の防災マスター</title>
+    <style>
+        :root {
+            --primary-color: #e74c3c;
+            --secondary-color: #f39c12;
+            --bg-color: #f9f9f9;
+            --text-color: #333;
+            --correct-color: #2ecc71;
+            --wrong-color: #e74c3c;
+        }
+
+        body {
+            font-family: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            flex: 1;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            text-align: center;
+            padding: 20px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2rem;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            margin-top: 5px;
+        }
+
+        .quiz-container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .progress-container {
+            margin-bottom: 15px;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            background-color: var(--secondary-color);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .question {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option {
+            padding: 15px;
+            background-color: #f1f1f1;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .option:hover {
+            background-color: #e9e9e9;
+        }
+
+        .option.selected {
+            border: 2px solid var(--secondary-color);
+        }
+
+        .option.correct {
+            background-color: var(--correct-color);
+            color: white;
+        }
+
+        .option.wrong {
+            background-color: var(--wrong-color);
+            color: white;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+
+        .next-btn {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        .next-btn:hover {
+            background-color: #e67e22;
+        }
+
+        .next-btn:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .result-container {
+            text-align: center;
+            display: none;
+        }
+
+        .score {
+            font-size: 1.5rem;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+
+        .message {
+            margin-bottom: 20px;
+        }
+
+        .restart-btn {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .restart-btn:hover {
+            background-color: #c0392b;
+        }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .feedback.correct {
+            background-color: rgba(46, 204, 113, 0.2);
+            border: 1px solid var(--correct-color);
+        }
+
+        .feedback.wrong {
+            background-color: rgba(231, 76, 60, 0.2);
+            border: 1px solid var(--wrong-color);
+        }
+
+        .oni-container {
+            text-align: center;
+            margin: 20px 0;
+            min-height: 150px;
+        }
+
+        .oni {
+            width: 150px;
+            margin: 0 auto;
+        }
+
+        .explanation {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .question {
+                font-size: 1rem;
+            }
+            
+            .option {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>怒れ！鬼の防災マスター</h1>
+        <div class="subtitle">〜間違えると鬼に怒られる防災知識確認テスト〜</div>
+    </header>
+
+    <div class="container">
+        <div class="quiz-container">
+            <div class="progress-container">
+                <div class="progress-text">問題 <span id="currentQuestion">1</span>/<span id="totalQuestions">10</span></div>
+                <div class="progress-bar">
+                    <div class="progress" id="progressBar"></div>
+                </div>
+            </div>
+
+            <div id="questionContainer">
+                <div class="question" id="question"></div>
+                <div class="options" id="options"></div>
+                <div class="feedback" id="feedback"></div>
+                <div class="oni-container" id="oniContainer">
+                    <svg class="oni" id="oni" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" style="display: none;">
+                        <!-- 鬼の顔（通常） -->
+                        <g id="normalOni">
+                            <circle cx="50" cy="50" r="40" fill="#e74c3c"/>
+                            <circle cx="35" cy="40" r="5" fill="white"/>
+                            <circle cx="65" cy="40" r="5" fill="white"/>
+                            <circle cx="35" cy="40" r="2" fill="black"/>
+                            <circle cx="65" cy="40" r="2" fill="black"/>
+                            <path d="M40 60 Q50 65 60 60" fill="none" stroke="black" stroke-width="2"/>
+                            <path d="M20 30 L30 20" stroke="black" stroke-width="3"/>
+                            <path d="M80 30 L70 20" stroke="black" stroke-width="3"/>
+                            <path d="M25 25 C15 15, 15 10, 10 5" stroke="black" stroke-width="2"/>
+                            <path d="M75 25 C85 15, 85 10, 90 5" stroke="black" stroke-width="2"/>
+                        </g>
+                        <!-- 鬼の顔（怒り） -->
+                        <g id="angryOni" style="display: none;">
+                            <circle cx="50" cy="50" r="40" fill="#c0392b"/>
+                            <path d="M30 40 L40 35 L30 30" fill="none" stroke="black" stroke-width="2"/>
+                            <path d="M70 40 L60 35 L70 30" fill="none" stroke="black" stroke-width="2"/>
+                            <circle cx="35" cy="40" r="5" fill="white"/>
+                            <circle cx="65" cy="40" r="5" fill="white"/>
+                            <circle cx="33" cy="38" r="2" fill="black"/>
+                            <circle cx="67" cy="38" r="2" fill="black"/>
+                            <path d="M30 65 Q50 55 70 65" fill="none" stroke="black" stroke-width="2"/>
+                            <path d="M20 30 L30 20" stroke="black" stroke-width="3"/>
+                            <path d="M80 30 L70 20" stroke="black" stroke-width="3"/>
+                            <path d="M25 25 C15 15, 15 10, 10 5" stroke="black" stroke-width="2"/>
+                            <path d="M75 25 C85 15, 85 10, 90 5" stroke="black" stroke-width="2"/>
+                            <path d="M40 75 L45 85 L50 75 L55 85 L60 75" fill="none" stroke="black" stroke-width="2"/>
+                        </g>
+                        <!-- 鬼の顔（喜び） -->
+                        <g id="happyOni" style="display: none;">
+                            <circle cx="50" cy="50" r="40" fill="#e74c3c"/>
+                            <path d="M35 35 Q35 40 40 40" fill="none" stroke="black" stroke-width="2"/>
+                            <path d="M65 35 Q65 40 60 40" fill="none" stroke="black" stroke-width="2"/>
+                            <circle cx="38" cy="35" r="1.5" fill="black"/>
+                            <circle cx="62" cy="35" r="1.5" fill="black"/>
+                            <path d="M40 60 Q50 70 60 60" fill="none" stroke="black" stroke-width="2"/>
+                            <path d="M20 30 L30 20" stroke="black" stroke-width="3"/>
+                            <path d="M80 30 L70 20" stroke="black" stroke-width="3"/>
+                            <path d="M25 25 C15 15, 15 10, 10 5" stroke="black" stroke-width="2"/>
+                            <path d="M75 25 C85 15, 85 10, 90 5" stroke="black" stroke-width="2"/>
+                        </g>
+                    </svg>
+                </div>
+                <div class="explanation" id="explanation"></div>
+                <div class="buttons">
+                    <button id="nextBtn" class="next-btn" disabled>次の問題へ</button>
+                </div>
+            </div>
+
+            <div id="resultContainer" class="result-container">
+                <h2>テスト結果</h2>
+                <div class="oni-container">
+                    <svg class="oni" id="resultOni" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+                        <!-- 結果の鬼の顔はJSで制御 -->
+                    </svg>
+                </div>
+                <div class="score">正解数: <span id="score">0</span>/<span id="totalQuestionsResult">10</span></div>
+                <div class="message" id="resultMessage"></div>
+                <button id="restartBtn" class="restart-btn">もう一度挑戦する</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 問題データ
+        const questions = [
+            {
+                question: "地震が発生した時、屋内で身を守るために最適な行動は？",
+                options: [
+                    "すぐに外に避難する",
+                    "丈夫な机の下に隠れる",
+                    "窓の近くに移動する",
+                    "エレベーターで避難する"
+                ],
+                correct: 1,
+                explanation: "地震の際はまず、丈夫な机やテーブルの下に隠れて、頭を保護することが重要です。揺れが収まってから避難しましょう。"
+            },
+            {
+                question: "非常用持ち出し袋に入れておくべきでないものは？",
+                options: [
+                    "携帯充電器",
+                    "飲料水",
+                    "テレビ",
+                    "常備薬"
+                ],
+                correct: 2,
+                explanation: "テレビは非常用持ち出し袋に入れるには大きすぎるため不適切です。水、食料、携帯充電器、救急用品、常備薬、懐中電灯などが適切です。"
+            },
+            {
+                question: "水害時の避難で、次のうち正しいのはどれ？",
+                options: [
+                    "浸水した道を車で避難する",
+                    "膝上まで水かさが上がったら、徒歩での避難は危険",
+                    "地下空間に避難する",
+                    "大雨が降っている最中に避難する"
+                ],
+                correct: 1,
+                explanation: "水深が膝上（約50cm）を超えると、成人でも歩行が困難になります。それより浅い場合でも流れが速いと危険です。早めの避難が大切です。"
+            },
+            {
+                question: "地震による津波警報が発令された場合、取るべき行動は？",
+                options: [
+                    "津波の様子を確認するため海岸に向かう",
+                    "自宅に戻って貴重品を取りに行く",
+                    "できるだけ高い場所に避難する",
+                    "車で遠くに避難する"
+                ],
+                correct: 2,
+                explanation: "津波警報が発令されたら、すぐに高台や津波避難ビルなど、高い場所に避難してください。津波は予想以上に速く到達することがあります。"
+            },
+            {
+                question: "火災が発生した際の正しい行動は？",
+                options: [
+                    "まず貴重品を持って避難する",
+                    "大声で「火事だ！」と叫んで周囲に知らせる",
+                    "エレベーターで避難する",
+                    "煙を吸わないようにマスクをつける"
+                ],
+                correct: 1,
+                explanation: "火災を発見したら「火事だ！」と大声で周囲に知らせ、初期消火が難しい場合はすぐに避難します。煙を避けるためには、濡れタオルで口を覆い、姿勢を低くして避難しましょう。"
+            },
+            {
+                question: "災害時の情報収集方法として、最も信頼性が低いのはどれ？",
+                options: [
+                    "気象庁公式サイト",
+                    "SNSでの匿名投稿",
+                    "自治体の防災無線",
+                    "NHKなどの公共放送"
+                ],
+                correct: 1,
+                explanation: "災害時はデマ情報が拡散しやすいため、出所不明のSNS投稿は注意が必要です。公的機関や信頼できる報道機関からの情報を優先しましょう。"
+            },
+            {
+                question: "地震の震度を表す単位は？",
+                options: [
+                    "メートル",
+                    "マグニチュード",
+                    "震度",
+                    "ヘルツ"
+                ],
+                correct: 2,
+                explanation: "地震の揺れの大きさを表す単位は「震度」です。一方、マグニチュードは地震そのもののエネルギーの大きさを表します。"
+            },
+            {
+                question: "大雨特別警報が発令された場合の対応として正しいのは？",
+                options: [
+                    "警報が解除されるまで外出を控える",
+                    "すでに災害が発生している可能性が高いため、命を守る最善の行動をとる",
+                    "窓の近くで雨の様子を確認する",
+                    "避難準備を始める"
+                ],
+                correct: 1,
+                explanation: "特別警報は、数十年に一度の深刻な災害が予想されるときに発令されます。この段階では避難準備ではなく、すでに命を守る行動が必要です。"
+            },
+            {
+                question: "台風接近時に窓ガラスの飛散防止として最も効果的なのは？",
+                options: [
+                    "窓を少し開けておく",
+                    "カーテンを閉める",
+                    "窓ガラスに飛散防止フィルムを貼る、または雨戸・シャッターを閉める",
+                    "窓の前に家具を置く"
+                ],
+                correct: 2,
+                explanation: "窓ガラスの飛散防止には、飛散防止フィルムの貼付や雨戸・シャッターの使用が効果的です。窓を開けておくと強風で被害が拡大する恐れがあります。"
+            },
+            {
+                question: "災害時に停電した場合、通信手段として最も確実なのはどれ？",
+                options: [
+                    "スマートフォンのSNSアプリ",
+                    "固定電話",
+                    "災害用伝言ダイヤル（171）",
+                    "メールサービス"
+                ],
+                correct: 2,
+                explanation: "災害用伝言ダイヤル（171）は災害時の通信混雑を避けるために開発されたシステムで、比較的つながりやすいです。ただし、複数の連絡手段を確保しておくことが重要です。"
+            }
+        ];
+
+        // 変数初期化
+        let currentQuestion = 0;
+        let score = 0;
+        let selectedOption = null;
+        let answered = false;
+
+        // DOM要素の取得
+        const questionElement = document.getElementById('question');
+        const optionsContainer = document.getElementById('options');
+        const feedbackElement = document.getElementById('feedback');
+        const explanationElement = document.getElementById('explanation');
+        const nextButton = document.getElementById('nextBtn');
+        const currentQuestionElement = document.getElementById('currentQuestion');
+        const totalQuestionsElement = document.getElementById('totalQuestions');
+        const totalQuestionsResultElement = document.getElementById('totalQuestionsResult');
+        const progressBar = document.getElementById('progressBar');
+        const questionContainer = document.getElementById('questionContainer');
+        const resultContainer = document.getElementById('resultContainer');
+        const scoreElement = document.getElementById('score');
+        const resultMessageElement = document.getElementById('resultMessage');
+        const restartButton = document.getElementById('restartBtn');
+        const oniElement = document.getElementById('oni');
+        const normalOni = document.getElementById('normalOni');
+        const angryOni = document.getElementById('angryOni');
+        const happyOni = document.getElementById('happyOni');
+        const resultOni = document.getElementById('resultOni');
+
+        // 問題を表示する関数
+        function displayQuestion() {
+            // 問題番号と進捗バーを更新
+            currentQuestionElement.textContent = currentQuestion + 1;
+            totalQuestionsElement.textContent = questions.length;
+            totalQuestionsResultElement.textContent = questions.length;
+            progressBar.style.width = `${((currentQuestion + 1) / questions.length) * 100}%`;
+
+            // 現在の問題を取得
+            const question = questions[currentQuestion];
+            
+            // 問題文を設定
+            questionElement.textContent = question.question;
+            
+            // 選択肢をクリア
+            optionsContainer.innerHTML = '';
+            
+            // 選択肢を作成
+            question.options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.classList.add('option');
+                optionElement.textContent = option;
+                optionElement.dataset.index = index;
+                optionElement.addEventListener('click', selectOption);
+                optionsContainer.appendChild(optionElement);
+            });
+            
+            // 状態をリセット
+            selectedOption = null;
+            answered = false;
+            nextButton.disabled = true;
+            feedbackElement.style.display = 'none';
+            explanationElement.textContent = '';
+            explanationElement.style.display = 'none';
+
+            // 鬼を表示（通常状態）
+            oniElement.style.display = 'block';
+            normalOni.style.display = 'block';
+            angryOni.style.display = 'none';
+            happyOni.style.display = 'none';
+        }
+
+        // 選択肢を選ぶ関数
+        function selectOption(e) {
+            // すでに回答済みなら何もしない
+            if (answered) return;
+            
+            // 前に選択されたものがあればクラスを削除
+            const options = document.querySelectorAll('.option');
+            options.forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            // 選択したものにクラスを追加
+            e.target.classList.add('selected');
+            
+            // 選択したインデックスを保存
+            selectedOption = parseInt(e.target.dataset.index);
+            
+            // 次へボタンを有効化
+            nextButton.disabled = false;
+        }
+
+        // 答えを確認する関数
+        function checkAnswer() {
+            if (selectedOption === null) return;
+            
+            answered = true;
+            const correctIndex = questions[currentQuestion].correct;
+            const options = document.querySelectorAll('.option');
+            
+            // 正解・不正解の表示
+            options.forEach((option, index) => {
+                if (index === correctIndex) {
+                    option.classList.add('correct');
+                } else if (index === selectedOption) {
+                    option.classList.add('wrong');
+                }
+            });
+            
+            // フィードバックと説明の表示
+            feedbackElement.style.display = 'block';
+            explanationElement.style.display = 'block';
+            explanationElement.textContent = questions[currentQuestion].explanation;
+            
+            if (selectedOption === correctIndex) {
+                // 正解の場合
+                score++;
+                feedbackElement.textContent = '正解！素晴らしい！';
+                feedbackElement.className = 'feedback correct';
+                // 鬼の表情を喜びに
+                normalOni.style.display = 'none';
+                angryOni.style.display = 'none';
+                happyOni.style.display = 'block';
+            } else {
+                // 不正解の場合
+                feedbackElement.textContent = '不正解！鬼が怒っているぞ！';
+                feedbackElement.className = 'feedback wrong';
+                // 鬼の表情を怒りに
+                normalOni.style.display = 'none';
+                angryOni.style.display = 'block';
+                happyOni.style.display = 'none';
+                
+                // 鬼を震わせるアニメーション
+                const shakeDuration = 500; // ミリ秒
+                const shakeStart = Date.now();
+                const shakeInterval = setInterval(() => {
+                    const elapsed = Date.now() - shakeStart;
+                    if (elapsed >= shakeDuration) {
+                        clearInterval(shakeInterval);
+                        oniElement.style.transform = 'translateX(0)';
+                        return;
+                    }
+                    
+                    const offset = Math.sin(elapsed / 30) * 5;
+                    oniElement.style.transform = `translateX(${offset}px)`;
+                }, 16);
+            }
+        }
+
+        // 次の問題へ進む関数
+        function nextQuestion() {
+            // まだ答えを確認していない場合は確認
+            if (!answered) {
+                checkAnswer();
+                nextButton.textContent = '次の問題へ';
+                return;
+            }
+            
+            // 次の問題へ
+            currentQuestion++;
+            
+            // まだ問題が残っているか確認
+            if (currentQuestion < questions.length) {
+                displayQuestion();
+                nextButton.textContent = '回答する';
+            } else {
+                // テスト終了
+                showResult();
+            }
+        }
+
+        // 結果を表示する関数
+        function showResult() {
+            questionContainer.style.display = 'none';
+            resultContainer.style.display = 'block';
+            
+            scoreElement.textContent = score;
+            
+            // スコアに応じたメッセージと鬼の表情
+            let resultMessage = '';
+            let resultOniContent = '';
+            
+            const scoreRatio = score / questions.length;
+            
+            if (scoreRatio >= 0.8) {
+                resultMessage = 'すごい！あなたは防災マスターです！鬼も大喜びです！';
+                resultOniContent = document.getElementById('happyOni').outerHTML;
+            } else if (scoreRatio >= 0.6) {
+                resultMessage = 'まずまずの成績です。もう少し勉強すれば完璧です！';
+                resultOniContent = document.getElementById('normalOni').outerHTML;
+            } else {
+                resultMessage = '残念...もっと防災知識を身につけましょう。鬼が怒っています！';
+                resultOniContent = document.getElementById('angryOni').outerHTML;
+            }
+            
+            resultMessageElement.textContent = resultMessage;
+            resultOni.innerHTML = resultOniContent;
+            
+            // 結果の鬼を表示
+            resultOni.querySelector('g').style.display = 'block';
+        }
+
+        // テストを再開する関数
+        function restartQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            questionContainer.style.display = 'block';
+            resultContainer.style.display = 'none';
+            displayQuestion();
+            nextButton.textContent = '回答する';
+        }
+
+        // イベントリスナーの設定
+        nextButton.addEventListener('click', nextQuestion);
+        restartButton.addEventListener('click', restartQuiz);
+
+        // 初期表示
+        displayQuestion();
+    </script>
+</body>
+</html>
